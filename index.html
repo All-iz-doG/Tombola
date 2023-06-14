@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<head>
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        td {
+            border: 1px solid #222;
+            text-align: center;
+            padding: 10px;
+            font-size: 18px;
+            color: #4d4d4d;
+            /* Color gris claro */
+        }
+
+        .bold {
+            font-weight: bold;
+            color: #fff;
+        }
+
+        #result {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #111;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(255, 255, 255, 0.1);
+        }
+
+        #last-number {
+            font-size: 24px;
+            color: #fff;
+        }
+
+        #last-five-numbers {
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .number {
+            display: inline-block;
+            margin-right: 10px;
+            padding: 5px 10px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #333;
+            border-radius: 3px;
+        }
+
+        .number:hover {
+            background-color: #555;
+            cursor: pointer;
+        }
+
+        #modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        #modal-content {
+            background-color: #333;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        #close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #close:hover,
+        #close:focus {
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        #number-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        #number-list li {
+            margin-bottom: 5px;
+            padding: 5px;
+            font-size: 18px;
+        }
+
+        #counter {
+            font-size: 20px;
+            margin-top: 10px;
+        }
+
+        #reset-btn {
+            background-color: #333;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 3px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        #reset-btn:hover {
+            background-color: #555;
+        }
+
+        #generate-btn {
+            background: green;
+            padding: 10px;
+            color: white;
+            border: none;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Bingo!</h1>
+    <table id="grid">
+    </table>
+
+    <button id="generate-btn" onclick="selectRandomNumber()">Seleccionar número aleatorio</button>
+
+    <div id="result">
+        <div>
+            Último número obtenido: <span id="last-number"></span>
+        </div>
+        <div id="last-five-numbers">
+            Últimos cinco números:
+        </div>
+        <button onclick="openModal()">Ver lista completa</button>
+        <div id="counter">
+            Cantidad de números generados: <span id="count">0</span>
+        </div>
+    </div>
+
+    <div id="modal">
+        <div id="modal-content">
+            <span id="close">&times;</span>
+            <h2>Lista completa de números seleccionados</h2>
+            <ul id="number-list"></ul>
+        </div>
+    </div>
+
+    <button id="reset-btn" onclick="resetConfirmation()">Reiniciar Tablero</button>
+
+    <script>
+        var numbers = [];
+        var selectedNumbers = [];
+        var gridTable = document.getElementById("grid");
+        var lastNumberElement = document.getElementById("last-number");
+        var lastFiveNumbersContainer = document.getElementById("last-five-numbers");
+        var modal = document.getElementById("modal");
+        var closeModal = document.getElementById("close");
+        var numberList = document.getElementById("number-list");
+        var countElement = document.getElementById("count");
+        var resetBtn = document.getElementById("reset-btn");
+        var count = 0;
+
+        // Rellenar el array con los números del 0 al 99
+        for (var i = 0; i < 100; i++) {
+            numbers.push(i);
+        }
+
+        // Generar la tabla HTML
+        for (var i = 0; i < 10; i++) {
+            var row = document.createElement("tr");
+
+            for (var j = 0; j < 10; j++) {
+                var cell = document.createElement("td");
+                cell.textContent = numbers[i * 10 + j];
+                row.appendChild(cell);
+            }
+
+            gridTable.appendChild(row);
+        }
+
+        function selectRandomNumber() {
+            if (numbers.length === 0) {
+                alert("No hay más números disponibles");
+                return;
+            }
+
+            // Generar un índice aleatorio
+            var randomIndex = Math.floor(Math.random() * numbers.length);
+            var selectedNumber = numbers[randomIndex];
+
+            // Agregar el número seleccionado al array de números seleccionados
+            selectedNumbers.push(selectedNumber);
+
+            // Eliminar el número seleccionado del array original
+            numbers.splice(randomIndex, 1);
+
+            // Obtener la celda correspondiente al número seleccionado
+            var selectedCell = gridTable.rows[Math.floor(selectedNumber / 10)].cells[selectedNumber % 10];
+
+            // Marcar en negrita el número seleccionado
+            selectedCell.classList.add("bold");
+
+            // Actualizar el último número obtenido
+            lastNumberElement.textContent = selectedNumber;
+
+            // Actualizar la lista de los últimos cinco números
+            updateLastFiveNumbers();
+
+            // Actualizar la lista completa de números en el modal
+            updateNumberList();
+
+            // Incrementar el contador de cantidad de números generados
+            count++;
+            countElement.textContent = count;
+        }
+
+        function updateLastFiveNumbers() {
+            lastFiveNumbersContainer.innerHTML = "";
+            var start = Math.max(0, selectedNumbers.length - 5);
+            for (var i = start; i < selectedNumbers.length; i++) {
+                var numberDiv = document.createElement("div");
+                numberDiv.classList.add("number");
+                numberDiv.textContent = selectedNumbers[i];
+                lastFiveNumbersContainer.appendChild(numberDiv);
+            }
+        }
+
+        function openModal() {
+            modal.style.display = "block";
+        }
+
+        closeModal.onclick = function () {
+            modal.style.display = "none";
+        }
+
+        window.onclick = function (event) {
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        function updateNumberList() {
+            numberList.innerHTML = "";
+            for (var i = 0; i < selectedNumbers.length; i++) {
+                var listItem = document.createElement("li");
+                listItem.textContent = selectedNumbers[i];
+
+                if ((i + 1) % 10 === 0) {
+                    listItem.style.marginBottom = "15px";
+                }
+
+                numberList.appendChild(listItem);
+            }
+        }
+
+        function resetConfirmation() {
+            var confirmation = confirm("¿Estás seguro de querer reiniciar el tablero y los arrays?");
+
+            if (confirmation) {
+                resetBoard();
+            }
+        }
+
+        function resetBoard() {
+            // Reiniciar los arrays y el contador
+            numbers = [];
+            selectedNumbers = [];
+            count = 0;
+            countElement.textContent = count;
+
+            // Volver a llenar el array con los números del 0 al 99
+            for (var i = 0; i < 100; i++) {
+                numbers.push(i);
+            }
+
+            // Reiniciar la tabla HTML y quitar las clases "bold"
+            var cells = gridTable.getElementsByTagName("td");
+            for (var i = 0; i < cells.length; i++) {
+                cells[i].classList.remove("bold");
+            }
+
+            // Reiniciar el último número obtenido y la lista de los últimos cinco números
+            lastNumberElement.textContent = "";
+            lastFiveNumbersContainer.innerHTML = "";
+
+            // Reiniciar la lista completa de números en el modal
+            updateNumberList();
+        }
+    </script>
+</body>
+
+</html>
